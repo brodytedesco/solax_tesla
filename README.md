@@ -11,8 +11,7 @@ To use this script the following is needed:
 
 Enter variables as they fit in the credentials.json file
 
-The Iphone will need to create two shortcuts, one for when it receives a "start" message to start charging, and
-another for when it receives a "stop" message to stop charging.
+The Iphone will need to create 5 shortcuts, 4 for when it receives a "start" message, appended by the "charging at:<amps>" to change the current of the charger for (8A,16A,24A,32A), and another for when it receives a "stop" message to stop charging.
 
 # Credits
 @squishykid's solax project's helped me translate the 100 length array returned from the inverter into useable values: https://github.com/squishykid/solax/tree/master
