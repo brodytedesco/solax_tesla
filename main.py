@@ -99,9 +99,11 @@ def __main__():
             if charge == 100:
                 print("Fully Charged")
                 current_watts_consumed_from_charging=0
+                charging_startedby_script=False
             elif charge_state == "Disconnected":
                 print("Tesla is Disconnected from a Charger")
                 current_watts_consumed_from_charging=0
+                charging_startedby_script=False
             elif charging_startedby_script==False and charge_state=="Charging":
                 print("Charging was started by user, therefore this script will not interrupt")
                 current_watts_consumed_from_charging=0
@@ -116,23 +118,28 @@ def __main__():
                         )
                         print(message.sid)
                         current_watts_consumed_from_charging=0
+                        charging_startedby_script=False
             else:
                 #if we meet minimum charge constraints
                 if (adjusted_feedin > watt_steps[0]+buffer_watts):
                     print("Start charging calculations")
+                    previous_amps=amps_for_app
                     amps_for_app,current_watts_consumed_from_charging = current_calculate(adjusted_feedin)
-                    print("Charging set at: "+str(amps_for_app)+ "Amps, "+str(current_watts_consumed_from_charging)+"Watts")
-                    
-                    message = client.messages.create(
-                    body='start charging at: '+str(amps_for_app),
-                    from_=twilio_phone_number,
-                    to=recipient_phone_number
-                    )
-                    print(message.sid)
+                    if(previous_amps==amps_for_app):
+                        print("Charging set at: "+str(amps_for_app)+ "Amps, "+str(current_watts_consumed_from_charging)+"Watts")
+                        message = client.messages.create(
+                        body='start charging at: '+str(amps_for_app),
+                        from_=twilio_phone_number,
+                        to=recipient_phone_number
+                        )
+                        print(message.sid)
+                    else:
+                        print("Resuming Charging at: " + str(amps_for_app))
                     charging_startedby_script=True
                 else:
                     print("will not charge due to average feed in being at:"+str(average_feedin))
                     current_watts_consumed_from_charging=0
+                    charging_startedby_script=False
                     
 
 __main__()
