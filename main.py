@@ -66,21 +66,25 @@ def __main__():
     start_time = time.time()
     charging_startedby_script = False
     current_watts_consumed_from_charging=0
-    
+    amps_for_app=0
+    watts_count = 0
     while True:
         
         current_time = time.time()
         elapsed_time = current_time - start_time
-        
+        watts_count += 1
+
         grid = get_solar_stats.get_solar_grid()
         print("Feed in (W): "+str(grid))
-        array_of_feed_in.append(grid)
+        # The trigger to swap the charging can take 30 seconds so we accomidate by this, by not counting the readings until a set amount of cycles
+        if watts_count > 4:
+            array_of_feed_in.append(grid)
         time.sleep(5)
 
 
         
         if elapsed_time >= duration_seconds:
-            
+            watts_count = 0
             start_time = time.time()
             
             # Averaging the feed in
@@ -107,25 +111,25 @@ def __main__():
             elif charging_startedby_script==False and charge_state=="Charging":
                 print("Charging was started by user, therefore this script will not interrupt")
                 current_watts_consumed_from_charging=0
-            elif charging_startedby_script==True and charge_state=="Charging":
-                if adjusted_feedin < watt_steps[0]+buffer_watts:
-                    if average_feedin < -1000:
-                        print("stop charging")
-                        message = client.messages.create(
-                        body='stop',
-                        from_=twilio_phone_number,
-                        to=recipient_phone_number
-                        )
-                        print(message.sid)
-                        current_watts_consumed_from_charging=0
-                        charging_startedby_script=False
+            elif charging_startedby_script==True and charge_state=="Charging" and adjusted_feedin < watt_steps[0]+buffer_watts:
+  
+                print("stop charging")
+                message = client.messages.create(
+                body='stop',
+                from_=twilio_phone_number,
+                to=recipient_phone_number
+                )
+                print(message.sid)
+                current_watts_consumed_from_charging=0
+                charging_startedby_script=False
+         
             else:
                 #if we meet minimum charge constraints
                 if (adjusted_feedin > watt_steps[0]+buffer_watts):
                     print("Start charging calculations")
                     previous_amps=amps_for_app
                     amps_for_app,current_watts_consumed_from_charging = current_calculate(adjusted_feedin)
-                    if(previous_amps==amps_for_app):
+                    if(previous_amps!=amps_for_app):
                         print("Charging set at: "+str(amps_for_app)+ "Amps, "+str(current_watts_consumed_from_charging)+"Watts")
                         message = client.messages.create(
                         body='start charging at: '+str(amps_for_app),
@@ -141,5 +145,5 @@ def __main__():
                     current_watts_consumed_from_charging=0
                     charging_startedby_script=False
                     
-
+            print("Script States: charging_startedby_script: "+str(charging_startedby_script)+", amps_for_app: "+amps_for_app+", current_watts_consumed_from_charging: "+current_watts_consumed_from_charging)
 __main__()
