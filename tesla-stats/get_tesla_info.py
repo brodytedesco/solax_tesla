@@ -79,13 +79,13 @@ def get_tesla_info():
             if response.status_code == 200:
                 pass
             else:
-                print("Tesla not responive" + response.status_code)
-                print(response.text)
+                print("Tesla not responive" + str(response.status_code))
+
                 exit()
 
         else:
-            print("Tesla not responive:", response.status_code)
-            print(response.text)
+            print("Tesla not responive" + str(response.status_code))
+
             exit()
            
     else:
